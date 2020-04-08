@@ -1,10 +1,10 @@
 {
   "name": "pathfinding",
   "title": "Pathfinding",
-  "description": "A modules to find the shortest path for a token to reach a chosen point",
+  "description": "A module to find the shortest path for a token to reach a chosen point",
   "url": "https://github.com/Exote/foundry-vtt-pathfinding/blob/master/module.json",
   "download": "https://github.com/Exote/foundry-vtt-pathfinding/archive/master.zip",
-  "author": "Moe",
+  "author": "Exote (Moe#6034)",
   "version": "0.0.1",
   "scripts": ["./dist/js/main.js"],
   "minimumCoreVersion": "0.5.3"
