@@ -112,8 +112,8 @@ Hooks.on("getSceneControlButtons", (buttons) => {
   let tokenButton = buttons.find((b) => b.name === "token");
   if (tokenButton) {
     tokenButton.tools.push({
-      name: "combat-ai",
-      title: name,
+      name: "pathfinding",
+      title: "Pathfinding",
       icon: "fas fa-route",
       visible: true,
       onClick: () => {
