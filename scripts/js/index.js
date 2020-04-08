@@ -13,7 +13,12 @@ const gridResolution = 4;
 
 function moveTokenToWaypoint(token, waypoint) {
   return moveQueue.add(() => {
-    return token.setPosition(waypoint[0], waypoint[1]);
+    return token.setPosition(waypoint[0], waypoint[1]).then(() => {
+      return token.update({
+        x: waypoint[0],
+        y: waypoint[1],
+      });
+    });
   });
 }
 
@@ -87,7 +92,7 @@ function mousemoveListener(event) {
   }, 100);
 }
 
-function rightupListener(event) {
+function rightupListener() {
   if (lastDrawnPath && lastPath) {
     const token = canvas.tokens.controlledTokens[0];
     const movePromises = [];
