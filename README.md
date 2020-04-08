@@ -5,7 +5,7 @@ A module to find the shortest path for a token to reach a chosen point.
 ## Installation
 1. Copy this link and use it in Foundry's Module Manager to install the module.
 
-    > https://github.com/Exote/foundry-vtt-pathfinding/blob/master/module.json
+    > https://raw.githubusercontent.com/Exote/foundry-vtt-pathfinding/master/module.json
     
 2. Enable the Module in your World's module settings.
 
