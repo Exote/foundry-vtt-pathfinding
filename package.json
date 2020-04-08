@@ -1,0 +1,22 @@
+{
+  "name": "foundry-vtt-pathfinding",
+  "version": "0.0.1",
+  "description": "",
+  "dependencies": {
+    "@babel/runtime": "^7.9.2",
+    "core-js": "^3.6.4",
+    "pathfinding": "^0.4.18",
+    "promise-queue": "^2.2.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "babel-loader": "^8.1.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "scripts": {
+    "build": "webpack --mode production"
+  },
+  "author": "Exote"
+}
