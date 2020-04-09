@@ -1,6 +1,6 @@
 {
   "name": "foundry-vtt-pathfinding",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "dependencies": {
     "@babel/runtime": "^7.9.2",
     "core-js": "^3.6.4",

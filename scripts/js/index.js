@@ -61,12 +61,20 @@ class Pathfinding {
           visible: true,
           onClick: () => {
             if (canvas.tokens.controlledTokens.length === 1) {
-              canvas.stage.on("mousemove", this.mousemoveListener);
-              canvas.stage.on("rightup", this.rightupListener);
+              canvas.stage.on("mousemove", (event) =>
+                this.mousemoveListener(event)
+              );
+              canvas.stage.on("rightup", (event) =>
+                this.rightupListener(event)
+              );
             } else if (canvas.tokens.controlledTokens.length > 1) {
-              displayMessage(game.i18n.localize("pathfinding.errors.tooManyTokens"));
+              this.displayMessage(
+                game.i18n.localize("pathfinding.errors.tooManyTokens")
+              );
             } else {
-              displayMessage(game.i18n.localize("pathfinding.errors.tooFewTokens"));
+              this.displayMessage(
+                game.i18n.localize("pathfinding.errors.tooFewTokens")
+              );
             }
           },
         });
@@ -144,7 +152,7 @@ class Pathfinding {
         token
       );
       if (this.lastDrawnPath) {
-        deleteDrawingById(this.lastDrawnPath._id).then(() => {
+        this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
           this.sceneGrid.drawPath(path, token).then((drawnPath) => {
             this.lastDrawnPath = drawnPath;
             this.lastPath = path;
@@ -159,15 +167,15 @@ class Pathfinding {
     }, 100);
   }
 
-  rightupListener() {
+  rightupListener(event) {
     if (this.lastDrawnPath && this.lastPath && this.lastPath.length > 0) {
       const token = canvas.tokens.controlledTokens[0];
       const movePromises = [];
-      canvas.stage.removeListener("mousemove", mousemoveListener);
-      canvas.stage.removeListener("rightup", rightupListener);
-      PF.Util.compressPath(lastPath).forEach((waypoint, index) => {
+      canvas.stage.removeListener("mousemove", this.mousemoveListener);
+      canvas.stage.removeListener("rightup", this.rightupListener);
+      PF.Util.compressPath(this.lastPath).forEach((waypoint, index) => {
         if (index > 0) {
-          movePromises.push(moveTokenToWaypoint(token, waypoint));
+          movePromises.push(this.moveTokenToWaypoint(token, waypoint));
         }
       });
       Promise.all(movePromises).then(() => {
@@ -175,7 +183,7 @@ class Pathfinding {
           x: this.lastPath[this.lastPath.length - 1][0],
           y: this.lastPath[this.lastPath.length - 1][1],
         });
-        deleteDrawingById(this.lastDrawnPath._id);
+        this.deleteDrawingById(this.lastDrawnPath._id);
       });
     }
   }
