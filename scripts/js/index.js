@@ -139,36 +139,45 @@ class Pathfinding {
   }
 
   mousemoveListener(event) {
-    if (this.countdown) {
-      clearTimeout(this.countdown);
-    }
-    this.countdown = setTimeout(() => {
-      const token = canvas.tokens.controlledTokens[0];
-      const path = this.sceneGrid.findPath(
-        token.center.x,
-        token.center.y,
-        event.data.destination.x,
-        event.data.destination.y,
-        token
-      );
-      if (this.lastDrawnPath) {
-        this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
-          this.sceneGrid.drawPath(path, token).then((drawnPath) => {
-            this.lastDrawnPath = drawnPath;
-            this.lastPath = path;
-          });
-        });
-      } else {
-        this.sceneGrid.drawPath(path, token).then((drawnPath) => {
-          this.lastDrawnPath = drawnPath;
-          this.lastPath = path;
-        });
+    if (!game.paused) {
+      if (this.countdown) {
+        clearTimeout(this.countdown);
       }
-    }, 100);
+      this.countdown = setTimeout(() => {
+        const token = canvas.tokens.controlledTokens[0];
+        if (token) {
+          const path = this.sceneGrid.findPath(
+            token.center.x,
+            token.center.y,
+            event.data.destination.x,
+            event.data.destination.y,
+            token
+          );
+          if (this.lastDrawnPath) {
+            this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
+              this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+                this.lastDrawnPath = drawnPath;
+                this.lastPath = path;
+              });
+            });
+          } else {
+            this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+              this.lastDrawnPath = drawnPath;
+              this.lastPath = path;
+            });
+          }
+        }
+      }, 100);
+    }
   }
 
   rightupListener(event) {
-    if (this.lastDrawnPath && this.lastPath && this.lastPath.length > 0) {
+    if (
+      this.lastDrawnPath &&
+      this.lastPath &&
+      this.lastPath.length > 0 &&
+      !game.paused
+    ) {
       const token = canvas.tokens.controlledTokens[0];
       const movePromises = [];
       canvas.stage.removeListener("mousemove", this.mousemoveListener);
