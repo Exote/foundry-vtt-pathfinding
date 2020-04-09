@@ -46,7 +46,7 @@ class Pathfinding {
         canvas.stage.removeListener("mousemove", this.mousemoveListener);
         canvas.stage.removeListener("rightup", this.rightupListener);
         if (this.lastDrawnPath) {
-          deleteDrawingById(this.lastDrawnPath._id);
+          this.deleteDrawingById(this.lastDrawnPath._id);
         }
       }
     });
@@ -140,34 +140,39 @@ class Pathfinding {
 
   mousemoveListener(event) {
     if (!game.paused) {
-      if (this.countdown) {
-        clearTimeout(this.countdown);
-      }
-      this.countdown = setTimeout(() => {
-        const token = canvas.tokens.controlledTokens[0];
-        if (token) {
-          const path = this.sceneGrid.findPath(
-            token.center.x,
-            token.center.y,
-            event.data.destination.x,
-            event.data.destination.y,
-            token
-          );
-          if (this.lastDrawnPath) {
-            this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
+      if (game.activeTool === "pathfinding") {
+        if (this.countdown) {
+          clearTimeout(this.countdown);
+        }
+        this.countdown = setTimeout(() => {
+          const token = canvas.tokens.controlledTokens[0];
+          if (token) {
+            const path = this.sceneGrid.findPath(
+              token.center.x,
+              token.center.y,
+              event.data.destination.x,
+              event.data.destination.y,
+              token
+            );
+            if (this.lastDrawnPath) {
+              this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
+                this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+                  this.lastDrawnPath = drawnPath;
+                  this.lastPath = path;
+                });
+              });
+            } else {
               this.sceneGrid.drawPath(path, token).then((drawnPath) => {
                 this.lastDrawnPath = drawnPath;
                 this.lastPath = path;
               });
-            });
-          } else {
-            this.sceneGrid.drawPath(path, token).then((drawnPath) => {
-              this.lastDrawnPath = drawnPath;
-              this.lastPath = path;
-            });
+            }
           }
-        }
-      }, 100);
+        }, 100);
+      } else {
+        canvas.stage.removeListener("mousemove", this.mousemoveListener);
+        canvas.stage.removeListener("rightup", this.rightupListener);
+      }
     }
   }
 
@@ -176,7 +181,8 @@ class Pathfinding {
       this.lastDrawnPath &&
       this.lastPath &&
       this.lastPath.length > 0 &&
-      !game.paused
+      !game.paused &&
+      game.activeTool === "pathfinding"
     ) {
       const token = canvas.tokens.controlledTokens[0];
       const movePromises = [];
