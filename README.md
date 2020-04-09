@@ -10,10 +10,11 @@ A module to find the shortest path for a token to reach a chosen point.
 2. Enable the Module in your World's module settings.
 
 ## How to Use
-1. Select a single token (which you are able to control).
-2. Select the Basic Controls -> Pathfinding tool from the menu to the left.
-3. Move your mouse around the map, a line starting from your token should show you the quickest route to the position at your mouse. It will also show you the distance.
-4. Right click to move the token to the position at your mouse.
+1. Make sure the game isn't paused
+2. Select a single token (which you are able to control).
+3. Select the Basic Controls -> Pathfinding tool from the menu to the left.
+4. Move your mouse around the map, a line starting from your token should show you the quickest route to the position at your mouse. It will also show you the distance.
+5. Right click to move the token to the position at your mouse.
 
 ## Pathfinding Example
 ![Pathfinding Example](foundry-vtt-pathfinding1.jpg)
