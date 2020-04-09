@@ -3,149 +3,200 @@ import Queue from "promise-queue";
 import PathfindingGrid from "./grid";
 import PF from "pathfinding";
 
-let moveQueue = new Queue(1, Infinity);
-let sceneGrid;
-let messageDialog;
-let lastDrawnPath;
-let lastPath;
-let countdown;
-const gridResolution = 4;
+class Pathfinding {
+  constructor() {
+    this.moveQueue = new Queue(1, Infinity);
+    this.gridResolution = game.settings.get("pathfinding", "gridResolution");
+    this.sceneGrid;
+    this.messageDialog;
+    this.lastDrawnPath;
+    this.lastPath;
+    this.countdown;
 
-function moveTokenToWaypoint(token, waypoint) {
-  return moveQueue.add(() => {
-    return token.setPosition(waypoint[0], waypoint[1]).then(() => {
-      return token.update({
-        x: waypoint[0],
-        y: waypoint[1],
+    Hooks.on("canvasReady", () => {
+      this.sceneGrid = new PathfindingGrid(this.gridResolution);
+      if (game.settings.get("pathfinding", "drawGrid")) {
+        this.sceneGrid.drawGrid();
+      }
+    });
+
+    Hooks.on("createWall", () => {
+      this.updateGrid();
+      if (game.settings.get("pathfinding", "drawGrid")) {
+        this.sceneGrid.drawGrid();
+      }
+    });
+
+    Hooks.on("updateWall", () => {
+      this.updateGrid();
+      if (game.settings.get("pathfinding", "drawGrid")) {
+        this.sceneGrid.drawGrid();
+      }
+    });
+
+    Hooks.on("deleteWall", () => {
+      this.updateGrid();
+      if (game.settings.get("pathfinding", "drawGrid")) {
+        this.sceneGrid.drawGrid();
+      }
+    });
+
+    Hooks.on("controlToken", (token, control) => {
+      if (!control) {
+        canvas.stage.removeListener("mousemove", this.mousemoveListener);
+        canvas.stage.removeListener("rightup", this.rightupListener);
+        if (this.lastDrawnPath) {
+          deleteDrawingById(this.lastDrawnPath._id);
+        }
+      }
+    });
+
+    Hooks.on("getSceneControlButtons", (buttons) => {
+      let tokenButton = buttons.find((button) => button.name === "token");
+      if (tokenButton) {
+        tokenButton.tools.push({
+          name: "pathfinding",
+          title: "Pathfinding",
+          icon: "fas fa-route",
+          visible: true,
+          onClick: () => {
+            if (canvas.tokens.controlledTokens.length === 1) {
+              canvas.stage.on("mousemove", this.mousemoveListener);
+              canvas.stage.on("rightup", this.rightupListener);
+            } else if (canvas.tokens.controlledTokens.length > 1) {
+              displayMessage(game.i18n.localize("pathfinding.errors.tooManyTokens"));
+            } else {
+              displayMessage(game.i18n.localize("pathfinding.errors.tooFewTokens"));
+            }
+          },
+        });
+      }
+    });
+  }
+
+  updateGrid() {
+    this.sceneGrid.update();
+  }
+
+  moveTokenToWaypoint(token, waypoint) {
+    return this.moveQueue.add(() => {
+      return token.setPosition(waypoint[0], waypoint[1]).then(() => {
+        return token.update({
+          x: waypoint[0],
+          y: waypoint[1],
+        });
       });
     });
-  });
-}
+  }
 
-function displayMessage(message) {
-  if (!messageDialog) {
-    messageDialog = new Dialog(
-      {
-        title: name,
-        content: `<p>${message}</p>`,
-        buttons: {
-          dismiss: {
-            icon: '<i class="fas fa-times"></i>',
-            label: "Close",
-            callback: () => {
-              messageDialog = null;
+  displayMessage(message) {
+    if (!this.messageDialog || !this.messageDialog.rendered) {
+      this.messageDialog = new Dialog(
+        {
+          title: "Pathfinding",
+          content: `<p>${message}</p>`,
+          buttons: {
+            dismiss: {
+              icon: '<i class="fas fa-times"></i>',
+              label: "Close",
+              callback: () => {
+                this.messageDialog = null;
+              },
             },
           },
+          close: () => {
+            this.messageDialog = null;
+          },
         },
-        close: () => {
-          messageDialog = null;
-        },
-      },
-      { width: 300 }
-    ).render(true);
-  }
-}
-
-function deleteDrawingById(id) {
-  return new Promise((resolve) => {
-    let found = false;
-    canvas.drawings.placeables.forEach((placeable) => {
-      if (placeable.id === id) {
-        found = true;
-        placeable.delete().then(() => {
-          resolve();
-        });
-      }
-    });
-    if (!found) {
-      resolve();
+        { width: 300 }
+      ).render(true);
     }
-  });
-}
-
-function mousemoveListener(event) {
-  if (countdown) {
-    clearTimeout(countdown);
   }
-  countdown = setTimeout(() => {
-    const token = canvas.tokens.controlledTokens[0];
-    const path = sceneGrid.findPath(
-      token.center.x,
-      token.center.y,
-      event.data.destination.x,
-      event.data.destination.y,
-      token
-    );
-    if (lastDrawnPath) {
-      deleteDrawingById(lastDrawnPath._id).then(() => {
-        sceneGrid.drawPath(path, token).then((drawnPath) => {
-          lastDrawnPath = drawnPath;
-          lastPath = path;
-        });
-      });
-    } else {
-      sceneGrid.drawPath(path, token).then((drawnPath) => {
-        lastDrawnPath = drawnPath;
-        lastPath = path;
-      });
-    }
-  }, 100);
-}
 
-function rightupListener() {
-  if (lastDrawnPath && lastPath) {
-    const token = canvas.tokens.controlledTokens[0];
-    const movePromises = [];
-    canvas.stage.removeListener("mousemove", mousemoveListener);
-    canvas.stage.removeListener("rightup", rightupListener);
-    PF.Util.compressPath(lastPath).forEach((waypoint, index) => {
-      if (index > 0) {
-        movePromises.push(moveTokenToWaypoint(token, waypoint));
-      }
-    });
-    Promise.all(movePromises).then(() => {
-      token.update({
-        x: lastPath[lastPath.length - 1][0],
-        y: lastPath[lastPath.length - 1][1],
-      });
-      deleteDrawingById(lastDrawnPath._id);
-    });
-  }
-}
-
-Hooks.on("getSceneControlButtons", (buttons) => {
-  let tokenButton = buttons.find((b) => b.name === "token");
-  if (tokenButton) {
-    tokenButton.tools.push({
-      name: "pathfinding",
-      title: "Pathfinding",
-      icon: "fas fa-route",
-      visible: true,
-      onClick: () => {
-        if (canvas.tokens.controlledTokens.length === 1) {
-          canvas.stage.on("mousemove", mousemoveListener);
-          canvas.stage.on("rightup", rightupListener);
-        } else if (canvas.tokens.controlledTokens.length > 1) {
-          displayMessage("Please select only one token.");
-        } else {
-          displayMessage("Please select a token.");
+  deleteDrawingById(id) {
+    return new Promise((resolve) => {
+      let found = false;
+      canvas.drawings.placeables.forEach((placeable) => {
+        if (placeable.id === id) {
+          found = true;
+          placeable.delete().then(() => {
+            resolve();
+          });
         }
-      },
+      });
+      if (!found) {
+        resolve();
+      }
     });
   }
-});
 
-Hooks.on("canvasReady", () => {
-  sceneGrid = new PathfindingGrid(gridResolution);
-  // sceneGrid.drawGrid();
-});
+  mousemoveListener(event) {
+    if (this.countdown) {
+      clearTimeout(this.countdown);
+    }
+    this.countdown = setTimeout(() => {
+      const token = canvas.tokens.controlledTokens[0];
+      const path = this.sceneGrid.findPath(
+        token.center.x,
+        token.center.y,
+        event.data.destination.x,
+        event.data.destination.y,
+        token
+      );
+      if (this.lastDrawnPath) {
+        deleteDrawingById(this.lastDrawnPath._id).then(() => {
+          this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+            this.lastDrawnPath = drawnPath;
+            this.lastPath = path;
+          });
+        });
+      } else {
+        this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+          this.lastDrawnPath = drawnPath;
+          this.lastPath = path;
+        });
+      }
+    }, 100);
+  }
 
-Hooks.on("controlToken", (token, control) => {
-  if (!control) {
-    canvas.stage.removeListener("mousemove", mousemoveListener);
-    canvas.stage.removeListener("rightup", rightupListener);
-    if (lastDrawnPath) {
-      deleteDrawingById(lastDrawnPath._id);
+  rightupListener() {
+    if (this.lastDrawnPath && this.lastPath && this.lastPath.length > 0) {
+      const token = canvas.tokens.controlledTokens[0];
+      const movePromises = [];
+      canvas.stage.removeListener("mousemove", mousemoveListener);
+      canvas.stage.removeListener("rightup", rightupListener);
+      PF.Util.compressPath(lastPath).forEach((waypoint, index) => {
+        if (index > 0) {
+          movePromises.push(moveTokenToWaypoint(token, waypoint));
+        }
+      });
+      Promise.all(movePromises).then(() => {
+        token.update({
+          x: this.lastPath[this.lastPath.length - 1][0],
+          y: this.lastPath[this.lastPath.length - 1][1],
+        });
+        deleteDrawingById(this.lastDrawnPath._id);
+      });
     }
   }
+}
+
+Hooks.on("init", () => {
+  game.settings.register("pathfinding", "gridResolution", {
+    name: game.i18n.localize("pathfinding.gridResolution.name"),
+    hint: game.i18n.localize("pathfinding.gridResolution.hint"),
+    scope: "world",
+    config: true,
+    default: 4,
+    type: Number,
+  });
+  game.settings.register("pathfinding", "drawGrid", {
+    name: game.i18n.localize("pathfinding.drawGrid.name"),
+    hint: game.i18n.localize("pathfinding.drawGrid.hint"),
+    scope: "world",
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+  const pathfinding = new Pathfinding();
 });

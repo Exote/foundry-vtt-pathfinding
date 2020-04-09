@@ -3,9 +3,16 @@
   "title": "Pathfinding",
   "description": "A module to find the shortest path for a token to reach a chosen point.",
   "url": "https://github.com/Exote/foundry-vtt-pathfinding",
-  "download": "https://github.com/Exote/foundry-vtt-pathfinding/archive/v0.0.3.zip",
+  "download": "https://github.com/Exote/foundry-vtt-pathfinding/archive/v0.0.4.zip",
   "author": "Exote (Moe#6034)",
-  "version": "0.0.3",
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "version": "0.0.4",
   "scripts": ["./dist/js/main.js"],
   "minimumCoreVersion": "0.5.3"
 }
