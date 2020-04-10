@@ -1,5 +1,6 @@
 {
-  "pathfinding.errors.tooManyTokens": "Please select only one token.",
-  "pathfinding.errors.tooFewTokens": "Please select a token.",
-  "pathfinding.errors.gamePaused": "Pathfinding is disabled while game is paused."
+  "route-finder.errors.tooManyTokens": "Please select only one token.",
+  "route-finder.errors.tooFewTokens": "Please select a token.",
+  "route-finder.errors.gamePaused": "Route finding is disabled while game is paused.",
+  "route-finder.errors.oldNameFound": "It looks like you are also running an old copy of this module from before it was renamed, please uninstall 'pathfinding'."
 }

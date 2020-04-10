@@ -15,8 +15,28 @@ class Walkable {
     this.pathFinder = new PathFinder();
     this.pathFinder.entity = this.entity;
     this.pathFinder.set_mesh(this.mesh);
+
+    this.blockers = {
+      "-1": {
+        "-1": false,
+        "0": false,
+        "1": true,
+      },
+      "0": {
+        "-1": false,
+        "0": false,
+        "1": false,
+      },
+      "1": {
+        "-1": true,
+        "0": false,
+        "1": false,
+      },
+    };
+
     this.path = [];
-    this.objects = [];
+    this.walls = {};
+    this.blockingTokens = [];
     canvas.scene.data.walls.forEach((wall) => {
       this.addWall(wall);
     });
@@ -27,13 +47,41 @@ class Walkable {
       wall.move === 1 &&
       (wall.door === 0 || (wall.door === 1 && wall.ds === 0))
     ) {
-      this.objects[wall._id] = this.addLine(
+      this.walls[wall._id] = this.addLine(
         wall.c[0],
         wall.c[1],
         wall.c[2],
         wall.c[3]
       );
     }
+  }
+
+  updateBlockingTokens(token) {
+    this.blockingTokens.forEach((blocker) => {
+      console.log("removing blocking");
+      this.deleteObstacle(blocker);
+    });
+    canvas.tokens.placeables.forEach((otherToken) => {
+      if (this.blockers[otherToken.data.disposition][token.data.disposition]) {
+        this.blockingTokens.push(
+          this.addRectangle(
+            otherToken.x,
+            otherToken.y,
+            otherToken.w,
+            otherToken.h
+          )
+        );
+      }
+    });
+  }
+
+  addRectangle(x, y, w, h) {
+    var obj = new DaedalusObject();
+    obj.set_coordinates([0, 0, 0, h, 0, h, w, h, w, h, w, 0, w, 0, 0, 0]);
+    obj.set_x(x);
+    obj.set_y(y);
+    this.mesh.insertObject(obj);
+    return obj;
   }
 
   addLine(startX, startY, endX, endY) {
@@ -46,8 +94,8 @@ class Walkable {
   }
 
   deleteWallById(wallId) {
-    if (this.objects[wallId]) {
-      this.mesh.deleteObject(this.objects[wallId]);
+    if (this.walls[wallId]) {
+      this.mesh.deleteObject(this.walls[wallId]);
     }
   }
 
