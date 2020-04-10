@@ -16,24 +16,6 @@ class Walkable {
     this.pathFinder.entity = this.entity;
     this.pathFinder.set_mesh(this.mesh);
 
-    this.blockers = {
-      "-1": {
-        "-1": false,
-        "0": false,
-        "1": true,
-      },
-      "0": {
-        "-1": false,
-        "0": false,
-        "1": false,
-      },
-      "1": {
-        "-1": true,
-        "0": false,
-        "1": false,
-      },
-    };
-
     this.path = [];
     this.walls = {};
     this.blockingTokens = [];
@@ -56,13 +38,13 @@ class Walkable {
     }
   }
 
-  updateBlockingTokens(token) {
+  updateBlockingTokens(token, blockers) {
     this.blockingTokens.forEach((blocker) => {
       console.log("removing blocking");
       this.deleteObstacle(blocker);
     });
     canvas.tokens.placeables.forEach((otherToken) => {
-      if (this.blockers[otherToken.data.disposition][token.data.disposition]) {
+      if (otherToken.data._id !== token.data._id && blockers[otherToken.data.disposition][token.data.disposition]) {
         this.blockingTokens.push(
           this.addRectangle(
             otherToken.x,

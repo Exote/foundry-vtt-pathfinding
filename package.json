@@ -1,9 +1,9 @@
 {
   "name": "foundry-vtt-route-finder",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "dependencies": {
     "@babel/runtime": "^7.9.2",
-    "core-js": "^3.6.4",
+    "core-js": "^3.6.5",
     "hxdaedalus-js": "^1.0.1",
     "promise-queue": "^2.2.5"
   },
@@ -15,7 +15,8 @@
     "webpack-cli": "^3.3.11"
   },
   "scripts": {
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development"
   },
   "author": "Exote"
 }

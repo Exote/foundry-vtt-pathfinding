@@ -1,9 +1,11 @@
 "use strict";
 import Queue from "promise-queue";
 import Walkable from "./walkable";
+import Config from "./config";
 
 class RouteFinder {
   constructor() {
+    this.config = new Config();
     this.moveQueue = new Queue(1, Infinity);
     this.deleteQueue = new Queue(1, Infinity);
     this.walkable;
@@ -12,14 +14,18 @@ class RouteFinder {
     this.lastPath;
     this.countdown;
 
-    if (game.modules.get('pathfinding')) {
-      this.displayMessage(game.i18n.localize("route-finder.errors.oldNameFound"))
-    }
-
     Hooks.on("canvasReady", () => {
       this.walkable = new Walkable();
       canvas.stage.on("mousemove", (event) => this.mousemoveListener(event));
       canvas.stage.on("rightup", (event) => this.rightupListener(event));
+      if (
+        game.modules.get("pathfinding") &&
+        game.modules.get("pathfinding").active
+      ) {
+        this.displayMessage(
+          game.i18n.localize("route-finder.errors.oldNameFound")
+        );
+      }
     });
 
     Hooks.on("createWall", (scene, sceneID, wall) => {
@@ -52,7 +58,24 @@ class RouteFinder {
           this.deleteDrawingById(this.lastDrawnPath._id);
         }
       } else {
-        this.walkable.updateBlockingTokens(token);
+        const blockers = {
+          "-1": {
+            "-1": game.settings.get("route-finder", "hostileBlocksHostile"),
+            "0": game.settings.get("route-finder", "hostileBlocksNeutral"),
+            "1": game.settings.get("route-finder", "hostileBlocksFriendly"),
+          },
+          "0": {
+            "-1": game.settings.get("route-finder", "neutralBlocksHostile"),
+            "0": game.settings.get("route-finder", "neutralBlocksNeutral"),
+            "1": game.settings.get("route-finder", "neutralBlocksFriendly"),
+          },
+          "1": {
+            "-1": game.settings.get("route-finder", "friendlyBlocksHostile"),
+            "0": game.settings.get("route-finder", "friendlyBlocksNeutral"),
+            "1": game.settings.get("route-finder", "friendlyBlocksFriendly"),
+          },
+        };
+        this.walkable.updateBlockingTokens(token, blockers);
       }
     });
 
@@ -224,6 +247,8 @@ class RouteFinder {
       });
       Promise.all(movePromises).then(() => {
         this.deleteDrawingById(this.lastDrawnPath._id);
+        this.lastDrawnPath = null;
+        this.lastPath = null;
       });
     }
   }
@@ -232,3 +257,4 @@ class RouteFinder {
 Hooks.on("init", () => {
   const routeFinder = new RouteFinder();
 });
+CONFIG.debug.hooks = true;
