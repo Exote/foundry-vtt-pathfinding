@@ -1,8 +1,5 @@
 {
-  "pathfinding.gridResolution.name": "Pathfinding Grid Resolution",
-  "pathfinding.gridResolution.hint": "Each grid square on a scene is divided into this number of squares across, the higher the resolution the more accurate the pathfinding, but it also takes longer.",
-  "pathfinding.drawGrid.name": "Draw Pathfinding Grid",
-  "pathfinding.drawGrid.hint": "Only for debugging, this will draw the pathfinding grid over each scene, buggy and slow.",
   "pathfinding.errors.tooManyTokens": "Please select only one token.",
-  "pathfinding.errors.tooFewTokens": "Please select a token."
+  "pathfinding.errors.tooFewTokens": "Please select a token.",
+  "pathfinding.errors.gamePaused": "Pathfinding is disabled while game is paused."
 }
