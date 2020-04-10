@@ -1,5 +1,33 @@
 {
-  "pathfinding.errors.tooManyTokens": "Please select only one token.",
-  "pathfinding.errors.tooFewTokens": "Please select a token.",
-  "pathfinding.errors.gamePaused": "Pathfinding is disabled while game is paused."
+  "route-finder.errors.tooManyTokens": "Please select only one token.",
+  "route-finder.errors.tooFewTokens": "Please select a token.",
+  "route-finder.errors.gamePaused": "Route finding is disabled while game is paused.",
+  "route-finder.errors.oldNameFound": "It looks like you are running an old copy of this module (before it was renamed), please uninstall 'pathfinding'.",
+
+  "route-finder.friendlyBlocksFriendly.name": "Friendly Tokens Block Friendly Tokens",
+  "route-finder.friendlyBlocksFriendly.hint": "Tick to prevent finding routes for friendly tokens through other friendly tokens.",
+
+  "route-finder.friendlyBlocksNeutral.name": "Friendly Tokens Block Neutral Tokens",
+  "route-finder.friendlyBlocksNeutral.hint": "Tick to prevent finding routes for friendly tokens through neutral tokens.",
+
+  "route-finder.friendlyBlocksHostile.name": "Friendly Tokens Block Hostile Tokens",
+  "route-finder.friendlyBlocksHostile.hint": "Tick to prevent finding routes for friendly tokens through hostile tokens.",
+
+  "route-finder.neutralBlocksFriendly.name": "Neutral Tokens Block Friendly Tokens",
+  "route-finder.neutralBlocksFriendly.hint": "Tick to prevent finding routes for neutral tokens through friendly tokens.",
+
+  "route-finder.neutralBlocksNeutral.name": "Neutral Tokens Block Neutral Tokens",
+  "route-finder.neutralBlocksNeutral.hint": "Tick to prevent finding routes for neutral tokens through other neutral tokens.",
+
+  "route-finder.neutralBlocksHostile.name": "Neutral Tokens Block Hostile Tokens",
+  "route-finder.neutralBlocksHostile.hint": "Tick to prevent finding routes for neutral tokens through hostile tokens.",
+
+  "route-finder.hostileBlocksFriendly.name": "Hostile Tokens Block Friendly Tokens",
+  "route-finder.hostileBlocksFriendly.hint": "Tick to prevent finding routes for hostile tokens through friendly tokens.",
+
+  "route-finder.hostileBlocksNeutral.name": "Hostile Tokens Block Neutral Tokens",
+  "route-finder.hostileBlocksNeutral.hint": "Tick to prevent finding routes for hostile tokens through neutral tokens.",
+
+  "route-finder.hostileBlocksHostile.name": "Hostile Tokens Block Hostile Tokens",
+  "route-finder.hostileBlocksHostile.hint": "Tick to prevent finding routes for hostile tokens through other hostile tokens."
 }

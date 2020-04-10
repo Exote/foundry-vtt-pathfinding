@@ -1,9 +1,11 @@
 "use strict";
 import Queue from "promise-queue";
 import Walkable from "./walkable";
+import Config from "./config";
 
-class Pathfinding {
+class RouteFinder {
   constructor() {
+    this.config = new Config();
     this.moveQueue = new Queue(1, Infinity);
     this.deleteQueue = new Queue(1, Infinity);
     this.walkable;
@@ -16,6 +18,14 @@ class Pathfinding {
       this.walkable = new Walkable();
       canvas.stage.on("mousemove", (event) => this.mousemoveListener(event));
       canvas.stage.on("rightup", (event) => this.rightupListener(event));
+      if (
+        game.modules.get("pathfinding") &&
+        game.modules.get("pathfinding").active
+      ) {
+        this.displayMessage(
+          game.i18n.localize("route-finder.errors.oldNameFound")
+        );
+      }
     });
 
     Hooks.on("createWall", (scene, sceneID, wall) => {
@@ -47,6 +57,25 @@ class Pathfinding {
         if (this.lastDrawnPath) {
           this.deleteDrawingById(this.lastDrawnPath._id);
         }
+      } else {
+        const blockers = {
+          "-1": {
+            "-1": game.settings.get("route-finder", "hostileBlocksHostile"),
+            "0": game.settings.get("route-finder", "hostileBlocksNeutral"),
+            "1": game.settings.get("route-finder", "hostileBlocksFriendly"),
+          },
+          "0": {
+            "-1": game.settings.get("route-finder", "neutralBlocksHostile"),
+            "0": game.settings.get("route-finder", "neutralBlocksNeutral"),
+            "1": game.settings.get("route-finder", "neutralBlocksFriendly"),
+          },
+          "1": {
+            "-1": game.settings.get("route-finder", "friendlyBlocksHostile"),
+            "0": game.settings.get("route-finder", "friendlyBlocksNeutral"),
+            "1": game.settings.get("route-finder", "friendlyBlocksFriendly"),
+          },
+        };
+        this.walkable.updateBlockingTokens(token, blockers);
       }
     });
 
@@ -54,24 +83,24 @@ class Pathfinding {
       let tokenButton = buttons.find((button) => button.name === "token");
       if (tokenButton) {
         tokenButton.tools.push({
-          name: "pathfinding",
-          title: "Pathfinding",
+          name: "route-finder",
+          title: "Route Finder",
           icon: "fas fa-route",
           visible: true,
           onClick: () => {
             if (canvas.tokens.controlledTokens.length === 1) {
               if (game.paused) {
                 this.displayMessage(
-                  game.i18n.localize("pathfinding.errors.gamePaused")
+                  game.i18n.localize("route-finder.errors.gamePaused")
                 );
               }
             } else if (canvas.tokens.controlledTokens.length > 1) {
               this.displayMessage(
-                game.i18n.localize("pathfinding.errors.tooManyTokens")
+                game.i18n.localize("route-finder.errors.tooManyTokens")
               );
             } else {
               this.displayMessage(
-                game.i18n.localize("pathfinding.errors.tooFewTokens")
+                game.i18n.localize("route-finder.errors.tooFewTokens")
               );
             }
           },
@@ -80,7 +109,7 @@ class Pathfinding {
     });
 
     Hooks.on("renderSceneControls", () => {
-      if (game.activeTool !== "pathfinding" && this.lastDrawnPath) {
+      if (game.activeTool !== "route-finder" && this.lastDrawnPath) {
         setTimeout(() => {
           this.deleteDrawingById(this.lastDrawnPath._id);
         }, 100);
@@ -124,7 +153,7 @@ class Pathfinding {
     if (!this.messageDialog || !this.messageDialog.rendered) {
       this.messageDialog = new Dialog(
         {
-          title: "Pathfinding",
+          title: "Route Finding",
           content: `<p>${message}</p>`,
           buttons: {
             dismiss: {
@@ -166,7 +195,7 @@ class Pathfinding {
   mousemoveListener(event) {
     if (
       !game.paused &&
-      game.activeTool === "pathfinding" &&
+      game.activeTool === "route-finder" &&
       this.moveQueue.getPendingLength() === 0 &&
       this.moveQueue.getQueueLength() === 0
     ) {
@@ -207,7 +236,7 @@ class Pathfinding {
       this.lastPath &&
       this.lastPath.length > 0 &&
       !game.paused &&
-      game.activeTool === "pathfinding" &&
+      game.activeTool === "route-finder" &&
       this.moveQueue.getPendingLength() === 0 &&
       this.moveQueue.getQueueLength() === 0
     ) {
@@ -218,12 +247,14 @@ class Pathfinding {
       });
       Promise.all(movePromises).then(() => {
         this.deleteDrawingById(this.lastDrawnPath._id);
+        this.lastDrawnPath = null;
+        this.lastPath = null;
       });
     }
   }
 }
 
 Hooks.on("init", () => {
-  const pathfinding = new Pathfinding();
+  const routeFinder = new RouteFinder();
 });
 CONFIG.debug.hooks = true;
