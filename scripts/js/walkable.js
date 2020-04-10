@@ -44,7 +44,10 @@ class Walkable {
       this.deleteObstacle(blocker);
     });
     canvas.tokens.placeables.forEach((otherToken) => {
-      if (otherToken.data._id !== token.data._id && blockers[otherToken.data.disposition][token.data.disposition]) {
+      if (
+        otherToken.data._id !== token.data._id &&
+        blockers[otherToken.data.disposition][token.data.disposition]
+      ) {
         this.blockingTokens.push(
           this.addRectangle(
             otherToken.x,
@@ -85,12 +88,20 @@ class Walkable {
     this.mesh.deleteObject(obj);
   }
 
-  findPath(startX, startY, endX, endY, radius) {
+  findPath(startX, startY, endX, endY, radius, snapToGrid) {
     this.entity.set_radius(radius);
     this.entity.x = startX;
     this.entity.y = startY;
-
-    this.pathFinder.findPath(endX, endY, this.path);
+    if (snapToGrid) {
+      const snappedPosition = canvas.grid.getCenter(endX, endY);
+      this.pathFinder.findPath(
+        snappedPosition[0],
+        snappedPosition[1],
+        this.path
+      );
+    } else {
+      this.pathFinder.findPath(endX, endY, this.path);
+    }
 
     return this.path;
   }

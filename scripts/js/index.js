@@ -122,7 +122,7 @@ class RouteFinder {
       return new Promise((resolve) => {
         if (token) {
           const x = waypoint[0] - token.width / 2;
-          const y = waypoint[1] - token.height / 2;
+          const y = waypoint[1] - token.width / 2;
           let complete = false;
           setTimeout(() => {
             if (!complete) {
@@ -210,7 +210,8 @@ class RouteFinder {
             token.center.y,
             event.data.destination.x,
             event.data.destination.y,
-            token.width / 3
+            token.width / 3,
+            game.settings.get("route-finder", "snapToGrid")
           );
           if (this.lastDrawnPath) {
             this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
@@ -257,4 +258,3 @@ class RouteFinder {
 Hooks.on("init", () => {
   const routeFinder = new RouteFinder();
 });
-CONFIG.debug.hooks = true;

@@ -4,6 +4,9 @@
   "route-finder.errors.gamePaused": "Route finding is disabled while game is paused.",
   "route-finder.errors.oldNameFound": "It looks like you are running an old copy of this module (before it was renamed), please uninstall 'pathfinding'.",
 
+  "route-finder.snapToGrid.name": "Snap Path To Grid",
+  "route-finder.snapToGrid.hint": "Snap the end point of routes to the center of grids.",
+
   "route-finder.friendlyBlocksFriendly.name": "Friendly Tokens Block Friendly Tokens",
   "route-finder.friendlyBlocksFriendly.hint": "Tick to prevent finding routes for friendly tokens through other friendly tokens.",
 

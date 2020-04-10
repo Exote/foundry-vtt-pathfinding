@@ -1,5 +1,14 @@
 class Config {
   constructor() {
+    game.settings.register("route-finder", "snapToGrid", {
+      name: game.i18n.localize("route-finder.snapToGrid.name"),
+      hint: game.i18n.localize("route-finder.snapToGrid.hint"),
+      scope: "world",
+      config: true,
+      default: true,
+      type: Boolean,
+    });
+
     game.settings.register("route-finder", "friendlyBlocksFriendly", {
       name: game.i18n.localize("route-finder.friendlyBlocksFriendly.name"),
       hint: game.i18n.localize("route-finder.friendlyBlocksFriendly.hint"),
