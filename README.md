@@ -17,4 +17,4 @@ A module to find the shortest path for a token to reach a chosen point.
 5. Right click to move the token to the position at your mouse.
 
 ## Pathfinding Example
-![Pathfinding Example](foundry-vtt-pathfinding1.jpg)
+![Pathfinding Example](demo.gif)

@@ -1,46 +1,45 @@
 "use strict";
 import Queue from "promise-queue";
-import PathfindingGrid from "./grid";
-import PF from "pathfinding";
+import Walkable from "./walkable";
 
 class Pathfinding {
   constructor() {
     this.moveQueue = new Queue(1, Infinity);
-    this.gridResolution = game.settings.get("pathfinding", "gridResolution");
-    this.sceneGrid;
+    this.deleteQueue = new Queue(1, Infinity);
+    this.walkable;
     this.messageDialog;
     this.lastDrawnPath;
     this.lastPath;
     this.countdown;
 
     Hooks.on("canvasReady", () => {
-      this.sceneGrid = new PathfindingGrid(this.gridResolution);
-      if (game.settings.get("pathfinding", "drawGrid")) {
-        this.sceneGrid.drawGrid();
-      }
+      this.walkable = new Walkable();
       canvas.stage.on("mousemove", (event) => this.mousemoveListener(event));
       canvas.stage.on("rightup", (event) => this.rightupListener(event));
     });
 
-    Hooks.on("createWall", () => {
-      this.updateGrid();
-      if (game.settings.get("pathfinding", "drawGrid")) {
-        this.sceneGrid.drawGrid();
+    Hooks.on("createWall", (scene, sceneID, wall) => {
+      this.walkable.addWall(wall);
+    });
+
+    Hooks.on("updateWall", (scene, sceneID, changes, wallData) => {
+      const wall = wallData.currentData;
+      if (changes.hasOwnProperty("ds")) {
+        wall.ds = changes.ds;
+        if (wall.ds === 1) {
+          this.walkable.deleteWallById(wall._id);
+        } else {
+          this.walkable.addWall(wall);
+        }
+      } else if (changes.hasOwnProperty("c")) {
+        wall.c = changes.c;
+        this.walkable.deleteWallById(wall._id);
+        this.walkable.addWall(wall);
       }
     });
 
-    Hooks.on("updateWall", () => {
-      this.updateGrid();
-      if (game.settings.get("pathfinding", "drawGrid")) {
-        this.sceneGrid.drawGrid();
-      }
-    });
-
-    Hooks.on("deleteWall", () => {
-      this.updateGrid();
-      if (game.settings.get("pathfinding", "drawGrid")) {
-        this.sceneGrid.drawGrid();
-      }
+    Hooks.on("deleteWall", (scene, sceneID, wallId) => {
+      this.walkable.deleteWallById(wallId);
     });
 
     Hooks.on("controlToken", (token, control) => {
@@ -61,6 +60,11 @@ class Pathfinding {
           visible: true,
           onClick: () => {
             if (canvas.tokens.controlledTokens.length === 1) {
+              if (game.paused) {
+                this.displayMessage(
+                  game.i18n.localize("pathfinding.errors.gamePaused")
+                );
+              }
             } else if (canvas.tokens.controlledTokens.length > 1) {
               this.displayMessage(
                 game.i18n.localize("pathfinding.errors.tooManyTokens")
@@ -74,37 +78,42 @@ class Pathfinding {
         });
       }
     });
-  }
 
-  updateGrid() {
-    this.sceneGrid.update();
+    Hooks.on("renderSceneControls", () => {
+      if (game.activeTool !== "pathfinding" && this.lastDrawnPath) {
+        setTimeout(() => {
+          this.deleteDrawingById(this.lastDrawnPath._id);
+        }, 100);
+      }
+    });
   }
 
   moveTokenToWaypoint(token, waypoint) {
     return this.moveQueue.add(() => {
       return new Promise((resolve) => {
-        let complete = false;
-        setTimeout(() => {
-          if (!complete) {
-            resolve();
-          }
-        }, 3000);
         if (token) {
-          token.setPosition(waypoint[0], waypoint[1]).then(() => {
-            token
-              .update({
-                x: waypoint[0],
-                y: waypoint[1],
-              })
-              .then(() => {
+          const x = waypoint[0] - token.width / 2;
+          const y = waypoint[1] - token.height / 2;
+          let complete = false;
+          setTimeout(() => {
+            if (!complete) {
+              resolve();
+            }
+          }, 3000);
+          if (token) {
+            token.setPosition(x, y).then(() => {
+              token.update({ x, y }).then(() => {
                 setTimeout(() => {
                   complete = true;
                   resolve();
-                }, 50);
+                }, 20);
               });
-          });
+            });
+          } else {
+            complete = true;
+            resolve();
+          }
         } else {
-          complete = true;
           resolve();
         }
       });
@@ -136,19 +145,21 @@ class Pathfinding {
   }
 
   deleteDrawingById(id) {
-    return new Promise((resolve) => {
-      let found = false;
-      canvas.drawings.placeables.forEach((placeable) => {
-        if (placeable.id === id) {
-          found = true;
-          placeable.delete().then(() => {
-            resolve();
-          });
+    return this.deleteQueue.add(() => {
+      return new Promise((resolve) => {
+        let found = false;
+        canvas.drawings.placeables.forEach((placeable) => {
+          if (placeable.id === id) {
+            found = true;
+            placeable.delete().finally(() => {
+              resolve();
+            });
+          }
+        });
+        if (!found) {
+          resolve();
         }
       });
-      if (!found) {
-        resolve();
-      }
     });
   }
 
@@ -165,22 +176,22 @@ class Pathfinding {
       this.countdown = setTimeout(() => {
         const token = canvas.tokens.controlledTokens[0];
         if (token) {
-          const path = this.sceneGrid.findPath(
+          const path = this.walkable.findPath(
             token.center.x,
             token.center.y,
             event.data.destination.x,
             event.data.destination.y,
-            token
+            token.width / 3
           );
           if (this.lastDrawnPath) {
             this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
-              this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+              this.walkable.drawPath(path, token).then((drawnPath) => {
                 this.lastDrawnPath = drawnPath;
                 this.lastPath = path;
               });
             });
           } else {
-            this.sceneGrid.drawPath(path, token).then((drawnPath) => {
+            this.walkable.drawPath(path, token).then((drawnPath) => {
               this.lastDrawnPath = drawnPath;
               this.lastPath = path;
             });
@@ -202,16 +213,10 @@ class Pathfinding {
     ) {
       const token = canvas.tokens.controlledTokens[0];
       const movePromises = [];
-      PF.Util.compressPath(this.lastPath).forEach((waypoint, index) => {
-        if (index > 0) {
-          movePromises.push(this.moveTokenToWaypoint(token, waypoint));
-        }
+      this.walkable.convertToWaypoints(this.lastPath).forEach((waypoint) => {
+        movePromises.push(this.moveTokenToWaypoint(token, waypoint));
       });
       Promise.all(movePromises).then(() => {
-        token.update({
-          x: this.lastPath[this.lastPath.length - 1][0],
-          y: this.lastPath[this.lastPath.length - 1][1],
-        });
         this.deleteDrawingById(this.lastDrawnPath._id);
       });
     }
@@ -219,21 +224,6 @@ class Pathfinding {
 }
 
 Hooks.on("init", () => {
-  game.settings.register("pathfinding", "gridResolution", {
-    name: game.i18n.localize("pathfinding.gridResolution.name"),
-    hint: game.i18n.localize("pathfinding.gridResolution.hint"),
-    scope: "world",
-    config: true,
-    default: 4,
-    type: Number,
-  });
-  game.settings.register("pathfinding", "drawGrid", {
-    name: game.i18n.localize("pathfinding.drawGrid.name"),
-    hint: game.i18n.localize("pathfinding.drawGrid.hint"),
-    scope: "world",
-    config: true,
-    default: false,
-    type: Boolean,
-  });
   const pathfinding = new Pathfinding();
 });
+CONFIG.debug.hooks = true;
