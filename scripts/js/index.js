@@ -1,18 +1,19 @@
 "use strict";
 import Queue from "promise-queue";
-import Walkable from "./walkable";
+import Walkable from "./walkable/index";
 import Config from "./config";
 
 class RouteFinder {
   constructor() {
     this.config = new Config();
     this.moveQueue = new Queue(1, Infinity);
-    this.deleteQueue = new Queue(1, Infinity);
+
     this.walkable;
     this.messageDialog;
-    this.lastDrawnPath;
-    this.lastPath;
     this.countdown;
+
+    this.mouseX;
+    this.mouseY;
 
     Hooks.on("canvasReady", () => {
       this.walkable = new Walkable();
@@ -28,54 +29,11 @@ class RouteFinder {
       }
     });
 
-    Hooks.on("createWall", (scene, sceneID, wall) => {
-      this.walkable.addWall(wall);
-    });
-
-    Hooks.on("updateWall", (scene, sceneID, changes, wallData) => {
-      const wall = wallData.currentData;
-      if (changes.hasOwnProperty("ds")) {
-        wall.ds = changes.ds;
-        if (wall.ds === 1) {
-          this.walkable.deleteWallById(wall._id);
-        } else {
-          this.walkable.addWall(wall);
-        }
-      } else if (changes.hasOwnProperty("c")) {
-        wall.c = changes.c;
-        this.walkable.deleteWallById(wall._id);
-        this.walkable.addWall(wall);
-      }
-    });
-
-    Hooks.on("deleteWall", (scene, sceneID, wallId) => {
-      this.walkable.deleteWallById(wallId);
-    });
-
     Hooks.on("controlToken", (token, control) => {
       if (!control) {
-        if (this.lastDrawnPath) {
-          this.deleteDrawingById(this.lastDrawnPath._id);
-        }
+        this.walkable.updateToken();
       } else {
-        const blockers = {
-          "-1": {
-            "-1": game.settings.get("route-finder", "hostileBlocksHostile"),
-            "0": game.settings.get("route-finder", "hostileBlocksNeutral"),
-            "1": game.settings.get("route-finder", "hostileBlocksFriendly"),
-          },
-          "0": {
-            "-1": game.settings.get("route-finder", "neutralBlocksHostile"),
-            "0": game.settings.get("route-finder", "neutralBlocksNeutral"),
-            "1": game.settings.get("route-finder", "neutralBlocksFriendly"),
-          },
-          "1": {
-            "-1": game.settings.get("route-finder", "friendlyBlocksHostile"),
-            "0": game.settings.get("route-finder", "friendlyBlocksNeutral"),
-            "1": game.settings.get("route-finder", "friendlyBlocksFriendly"),
-          },
-        };
-        this.walkable.updateBlockingTokens(token, blockers);
+        this.walkable.updateToken(token);
       }
     });
 
@@ -105,14 +63,6 @@ class RouteFinder {
             }
           },
         });
-      }
-    });
-
-    Hooks.on("renderSceneControls", () => {
-      if (game.activeTool !== "route-finder" && this.lastDrawnPath) {
-        setTimeout(() => {
-          this.deleteDrawingById(this.lastDrawnPath._id);
-        }, 100);
       }
     });
   }
@@ -173,25 +123,6 @@ class RouteFinder {
     }
   }
 
-  deleteDrawingById(id) {
-    return this.deleteQueue.add(() => {
-      return new Promise((resolve) => {
-        let found = false;
-        canvas.drawings.placeables.forEach((placeable) => {
-          if (placeable.id === id) {
-            found = true;
-            placeable.delete().finally(() => {
-              resolve();
-            });
-          }
-        });
-        if (!found) {
-          resolve();
-        }
-      });
-    });
-  }
-
   mousemoveListener(event) {
     if (
       !game.paused &&
@@ -203,39 +134,21 @@ class RouteFinder {
         clearTimeout(this.countdown);
       }
       this.countdown = setTimeout(() => {
-        const token = canvas.tokens.controlledTokens[0];
-        if (token) {
-          const path = this.walkable.findPath(
-            token.center.x,
-            token.center.y,
-            event.data.destination.x,
-            event.data.destination.y,
-            token.width / 3,
-            game.settings.get("route-finder", "snapToGrid")
-          );
-          if (this.lastDrawnPath) {
-            this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
-              this.walkable.drawPath(path, token).then((drawnPath) => {
-                this.lastDrawnPath = drawnPath;
-                this.lastPath = path;
-              });
-            });
-          } else {
-            this.walkable.drawPath(path, token).then((drawnPath) => {
-              this.lastDrawnPath = drawnPath;
-              this.lastPath = path;
-            });
-          }
-        }
+        this.mouseX = event.data.destination.x;
+        this.mouseY = event.data.destination.y;
+        this.walkable.displayPath(
+          event.data.destination.x,
+          event.data.destination.y,
+          game.settings.get("route-finder", "snapToGrid")
+        );
       }, 100);
     }
   }
 
   rightupListener(event) {
     if (
-      this.lastDrawnPath &&
-      this.lastPath &&
-      this.lastPath.length > 0 &&
+      this.mouseX &&
+      this.mouseY &&
       !game.paused &&
       game.activeTool === "route-finder" &&
       this.moveQueue.getPendingLength() === 0 &&
@@ -243,14 +156,15 @@ class RouteFinder {
     ) {
       const token = canvas.tokens.controlledTokens[0];
       const movePromises = [];
-      this.walkable.convertToWaypoints(this.lastPath).forEach((waypoint) => {
+      const waypoints = this.walkable.getPathWaypoints(
+        this.mouseX,
+        this.mouseY,
+        game.settings.get("route-finder", "snapToGrid")
+      );
+      waypoints.forEach((waypoint) => {
         movePromises.push(this.moveTokenToWaypoint(token, waypoint));
       });
-      Promise.all(movePromises).then(() => {
-        this.deleteDrawingById(this.lastDrawnPath._id);
-        this.lastDrawnPath = null;
-        this.lastPath = null;
-      });
+      Promise.all(movePromises).then(() => {});
     }
   }
 }
