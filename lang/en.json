@@ -7,6 +7,9 @@
   "route-finder.snapToGrid.name": "Snap Path To Grid",
   "route-finder.snapToGrid.hint": "Snap the end point of routes to the center of grids.",
 
+  "route-finder.reportMoveToChat.name": "Report Route Movement To Chat",
+  "route-finder.reportMoveToChat.hint": "Send the distance a token has moved along a route to chat.",
+
   "route-finder.friendlyBlocksFriendly.name": "Friendly Tokens Block Friendly Tokens",
   "route-finder.friendlyBlocksFriendly.hint": "Tick to prevent finding routes for friendly tokens through other friendly tokens.",
 
