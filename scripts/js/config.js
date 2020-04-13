@@ -9,6 +9,15 @@ class Config {
       type: Boolean,
     });
 
+    game.settings.register("route-finder", "reportMoveToChat", {
+      name: game.i18n.localize("route-finder.reportMoveToChat.name"),
+      hint: game.i18n.localize("route-finder.reportMoveToChat.hint"),
+      scope: "world",
+      config: true,
+      default: true,
+      type: Boolean,
+    });
+
     game.settings.register("route-finder", "friendlyBlocksFriendly", {
       name: game.i18n.localize("route-finder.friendlyBlocksFriendly.name"),
       hint: game.i18n.localize("route-finder.friendlyBlocksFriendly.hint"),

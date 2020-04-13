@@ -1,6 +1,6 @@
 {
   "name": "foundry-vtt-route-finder",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "dependencies": {
     "@babel/runtime": "^7.9.2",
     "core-js": "^3.6.5",

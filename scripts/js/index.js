@@ -10,12 +10,12 @@ class RouteFinder {
     this.deleteQueue = new Queue(1, Infinity);
     this.walkable;
     this.messageDialog;
-    this.lastDrawnPath;
     this.lastPath;
     this.countdown;
 
     Hooks.on("canvasReady", () => {
       this.walkable = new Walkable();
+      this.deleteAllOwnRoutes();
       canvas.stage.on("mousemove", (event) => this.mousemoveListener(event));
       canvas.stage.on("rightup", (event) => this.rightupListener(event));
       if (
@@ -53,29 +53,29 @@ class RouteFinder {
     });
 
     Hooks.on("controlToken", (token, control) => {
-      if (!control) {
-        if (this.lastDrawnPath) {
-          this.deleteDrawingById(this.lastDrawnPath._id);
+      if (this.walkable) {
+        if (!control) {
+          this.deleteAllOwnRoutes();
+        } else {
+          const blockers = {
+            "-1": {
+              "-1": game.settings.get("route-finder", "hostileBlocksHostile"),
+              "0": game.settings.get("route-finder", "hostileBlocksNeutral"),
+              "1": game.settings.get("route-finder", "hostileBlocksFriendly"),
+            },
+            "0": {
+              "-1": game.settings.get("route-finder", "neutralBlocksHostile"),
+              "0": game.settings.get("route-finder", "neutralBlocksNeutral"),
+              "1": game.settings.get("route-finder", "neutralBlocksFriendly"),
+            },
+            "1": {
+              "-1": game.settings.get("route-finder", "friendlyBlocksHostile"),
+              "0": game.settings.get("route-finder", "friendlyBlocksNeutral"),
+              "1": game.settings.get("route-finder", "friendlyBlocksFriendly"),
+            },
+          };
+          this.walkable.updateBlockingTokens(token, blockers);
         }
-      } else {
-        const blockers = {
-          "-1": {
-            "-1": game.settings.get("route-finder", "hostileBlocksHostile"),
-            "0": game.settings.get("route-finder", "hostileBlocksNeutral"),
-            "1": game.settings.get("route-finder", "hostileBlocksFriendly"),
-          },
-          "0": {
-            "-1": game.settings.get("route-finder", "neutralBlocksHostile"),
-            "0": game.settings.get("route-finder", "neutralBlocksNeutral"),
-            "1": game.settings.get("route-finder", "neutralBlocksFriendly"),
-          },
-          "1": {
-            "-1": game.settings.get("route-finder", "friendlyBlocksHostile"),
-            "0": game.settings.get("route-finder", "friendlyBlocksNeutral"),
-            "1": game.settings.get("route-finder", "friendlyBlocksFriendly"),
-          },
-        };
-        this.walkable.updateBlockingTokens(token, blockers);
       }
     });
 
@@ -109,9 +109,9 @@ class RouteFinder {
     });
 
     Hooks.on("renderSceneControls", () => {
-      if (game.activeTool !== "route-finder" && this.lastDrawnPath) {
+      if (game.activeTool !== "route-finder") {
         setTimeout(() => {
-          this.deleteDrawingById(this.lastDrawnPath._id);
+          this.deleteAllOwnRoutes();
         }, 100);
       }
     });
@@ -177,10 +177,11 @@ class RouteFinder {
     return this.deleteQueue.add(() => {
       return new Promise((resolve) => {
         let found = false;
+
         canvas.drawings.placeables.forEach((placeable) => {
           if (placeable.id === id) {
             found = true;
-            placeable.delete().finally(() => {
+            canvas.scene.deleteEmbeddedEntity("Drawing", id).finally(() => {
               resolve();
             });
           }
@@ -189,6 +190,22 @@ class RouteFinder {
           resolve();
         }
       });
+    });
+  }
+
+  deleteAllOwnRoutes() {
+    return this.deleteQueue.add(() => {
+      const ids = [];
+      canvas.drawings.placeables.forEach((drawing) => {
+        if (
+          drawing.author.isSelf &&
+          drawing.data.flags.length > 0 &&
+          drawing.data.flags.includes("routeFinderPath")
+        ) {
+          ids.push(drawing.id);
+        }
+      });
+      return canvas.scene.deleteEmbeddedEntity("Drawing", ids);
     });
   }
 
@@ -213,19 +230,11 @@ class RouteFinder {
             token.width / 3,
             game.settings.get("route-finder", "snapToGrid")
           );
-          if (this.lastDrawnPath) {
-            this.deleteDrawingById(this.lastDrawnPath._id).then(() => {
-              this.walkable.drawPath(path, token).then((drawnPath) => {
-                this.lastDrawnPath = drawnPath;
-                this.lastPath = path;
-              });
-            });
-          } else {
+          this.deleteAllOwnRoutes().then(() => {
             this.walkable.drawPath(path, token).then((drawnPath) => {
-              this.lastDrawnPath = drawnPath;
               this.lastPath = path;
             });
-          }
+          });
         }
       }, 100);
     }
@@ -233,7 +242,6 @@ class RouteFinder {
 
   rightupListener(event) {
     if (
-      this.lastDrawnPath &&
       this.lastPath &&
       this.lastPath.length > 0 &&
       !game.paused &&
@@ -247,9 +255,23 @@ class RouteFinder {
         movePromises.push(this.moveTokenToWaypoint(token, waypoint));
       });
       Promise.all(movePromises).then(() => {
-        this.deleteDrawingById(this.lastDrawnPath._id);
-        this.lastDrawnPath = null;
-        this.lastPath = null;
+        this.deleteAllOwnRoutes().then(() => {
+          if (game.settings.get("route-finder", "reportMoveToChat")) {
+            let chatData = {
+              content: `Moved: <b>${
+                this.walkable.calculateDistance(this.lastPath) +
+                game.scenes.viewed.data.gridUnits
+              }</b>`,
+              type: CONST.CHAT_MESSAGE_TYPES.OTHER,
+              speaker: ChatMessage.getSpeaker({ user: game.user }),
+            };
+            if (token.data.hidden) {
+              chatData["whisper"] = ChatMessage.getWhisperRecipients("GM")
+            }
+            ChatMessage.create(chatData);
+          }
+          this.lastPath = null;
+        });
       });
     }
   }

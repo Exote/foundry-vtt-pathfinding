@@ -129,7 +129,7 @@ class Walkable {
     );
   }
 
-  drawPath(path) {
+  drawPath(path, token) {
     return new Promise((resolve) => {
       const drawingDetails = {
         type: CONST.DRAWING_TYPES.POLYGON,
@@ -142,6 +142,7 @@ class Walkable {
         strokeAlpha: 0.7,
         text: this.calculateDistance(path) + game.scenes.viewed.data.gridUnits,
         fontSize: 48,
+        flags: ["routeFinderPath"],
         textColor: game.user.color,
       };
       Drawing.create(drawingDetails).then((drawing) => {
