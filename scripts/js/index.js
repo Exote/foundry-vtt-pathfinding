@@ -28,27 +28,24 @@ class RouteFinder {
       }
     });
 
-    Hooks.on("createWall", (scene, sceneID, wall) => {
+    Hooks.on("createWall", (scene, wall) => {
       this.walkable.addWall(wall);
     });
 
-    Hooks.on("updateWall", (scene, sceneID, changes, wallData) => {
-      const wall = wallData.currentData;
+    Hooks.on("updateWall", (scene, wall, changes) => {
       if (changes.hasOwnProperty("ds")) {
-        wall.ds = changes.ds;
         if (wall.ds === 1) {
-          this.walkable.deleteWallById(wall._id);
+          this.walkable.deleteWallById(changes._id);
         } else {
           this.walkable.addWall(wall);
         }
       } else if (changes.hasOwnProperty("c")) {
-        wall.c = changes.c;
         this.walkable.deleteWallById(wall._id);
         this.walkable.addWall(wall);
       }
     });
 
-    Hooks.on("deleteWall", (scene, sceneID, wallId) => {
+    Hooks.on("deleteWall", (scene, wallId) => {
       this.walkable.deleteWallById(wallId);
     });
 
@@ -121,8 +118,8 @@ class RouteFinder {
     return this.moveQueue.add(() => {
       return new Promise((resolve) => {
         if (token) {
-          const x = waypoint[0] - token.width / 2;
-          const y = waypoint[1] - token.width / 2;
+          const x = waypoint[0] - token.w / 2;
+          const y = waypoint[1] - token.h / 2;
           let complete = false;
           setTimeout(() => {
             if (!complete) {
@@ -227,7 +224,7 @@ class RouteFinder {
             token.center.y,
             event.data.destination.x,
             event.data.destination.y,
-            token.width / 3,
+            token.w / 3,
             game.settings.get("route-finder", "snapToGrid")
           );
           this.deleteAllOwnRoutes().then(() => {
@@ -266,7 +263,7 @@ class RouteFinder {
               speaker: ChatMessage.getSpeaker({ user: game.user }),
             };
             if (token.data.hidden) {
-              chatData["whisper"] = ChatMessage.getWhisperRecipients("GM")
+              chatData["whisper"] = ChatMessage.getWhisperRecipients("GM");
             }
             ChatMessage.create(chatData);
           }
