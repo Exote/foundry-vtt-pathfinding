@@ -3,7 +3,7 @@
   "title": "Route-Finder",
   "description": "A module to find the shortest route for a token to reach a chosen point.",
   "url": "https://github.com/Exote/foundry-vtt-pathfinding",
-  "download": "https://github.com/Exote/foundry-vtt-pathfinding/archive/v0.3.7.zip",
+  "download": "https://github.com/Exote/foundry-vtt-pathfinding/archive/v0.3.8.zip",
   "manifest": "https://raw.githubusercontent.com/Exote/foundry-vtt-pathfinding/master/module.json",
   "author": "Exote (Moe#6034)",
   "languages": [
@@ -13,8 +13,8 @@
       "path": "lang/en.json"
     }
   ],
-  "version": "0.3.7",
+  "version": "0.3.8",
   "scripts": ["./dist/js/main.js"],
   "minimumCoreVersion": "0.5.4",
-  "compatibleCoreVersion": "0.5.5"
+  "compatibleCoreVersion": "0.5.6"
 }

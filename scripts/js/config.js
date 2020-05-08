@@ -18,6 +18,24 @@ class Config {
       type: Boolean,
     });
 
+    game.settings.register("route-finder", "strokeWidth", {
+      name: game.i18n.localize("route-finder.strokeWidth.name"),
+      hint: game.i18n.localize("route-finder.strokeWidth.hint"),
+      scope: "world",
+      config: true,
+      default: 12,
+      type: Number,
+    });
+
+    game.settings.register("route-finder", "fontSize", {
+      name: game.i18n.localize("route-finder.fontSize.name"),
+      hint: game.i18n.localize("route-finder.fontSize.hint"),
+      scope: "world",
+      config: true,
+      default: 32,
+      type: Number,
+    });
+
     game.settings.register("route-finder", "friendlyBlocksFriendly", {
       name: game.i18n.localize("route-finder.friendlyBlocksFriendly.name"),
       hint: game.i18n.localize("route-finder.friendlyBlocksFriendly.hint"),

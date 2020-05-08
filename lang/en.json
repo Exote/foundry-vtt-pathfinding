@@ -10,6 +10,12 @@
   "route-finder.reportMoveToChat.name": "Report Route Movement To Chat",
   "route-finder.reportMoveToChat.hint": "Send the distance a token has moved along a route to chat.",
 
+  "route-finder.strokeWidth.name": "Route Line Width",
+  "route-finder.strokeWidth.hint": "Width of the route line",
+
+  "route-finder.fontSize.name": "Route Font Size",
+  "route-finder.fontSize.hint": "Size of the font displaying the route length",
+
   "route-finder.friendlyBlocksFriendly.name": "Friendly Tokens Block Friendly Tokens",
   "route-finder.friendlyBlocksFriendly.hint": "Tick to prevent finding routes for friendly tokens through other friendly tokens.",
 

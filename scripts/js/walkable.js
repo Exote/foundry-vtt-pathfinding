@@ -40,7 +40,6 @@ class Walkable {
 
   updateBlockingTokens(token, blockers) {
     this.blockingTokens.forEach((blocker) => {
-      console.log("removing blocking");
       this.deleteObstacle(blocker);
     });
     canvas.tokens.placeables.forEach((otherToken) => {
@@ -130,24 +129,40 @@ class Walkable {
   }
 
   drawPath(path, token) {
+    const waypoints = this.convertToWaypoints(path);
     return new Promise((resolve) => {
-      const drawingDetails = {
-        type: CONST.DRAWING_TYPES.POLYGON,
-        author: game.user._id,
-        x: 0,
-        y: 0,
-        points: this.convertToWaypoints(path),
-        strokeWidth: 15,
-        strokeColor: game.user.color,
-        strokeAlpha: 0.7,
-        text: this.calculateDistance(path) + game.scenes.viewed.data.gridUnits,
-        fontSize: 48,
-        flags: ["routeFinderPath"],
-        textColor: game.user.color,
-      };
-      Drawing.create(drawingDetails).then((drawing) => {
-        resolve(drawing);
-      });
+      if (waypoints.length > 0) {
+        const routeDrawingDetails = {
+          type: CONST.DRAWING_TYPES.POLYGON,
+          author: game.user._id,
+          x: 0,
+          y: 0,
+          points: waypoints,
+          strokeWidth: game.settings.get("route-finder", "strokeWidth"),
+          strokeColor: game.user.color,
+          strokeAlpha: 0.7,
+          flags: ["routeFinderPath"],
+          textColor: game.user.color,
+        };
+        const textDrawingDetails = {
+          type: CONST.DRAWING_TYPES.TEXT,
+          author: game.user._id,
+          x: waypoints[waypoints.length - 1][0],
+          y: waypoints[waypoints.length - 1][1],
+          strokeWidth: 0,
+          text: this.calculateDistance(path) + game.scenes.viewed.data.gridUnits,
+          fontSize: game.settings.get("route-finder", "fontSize"),
+          flags: ["routeFinderPath"],
+          textColor: game.user.color,
+        };
+        Drawing.create(routeDrawingDetails).then(() => {
+          Drawing.create(textDrawingDetails).then(() => {
+            resolve();
+          });
+        });
+      } else {
+        resolve();
+      }
     });
   }
 }

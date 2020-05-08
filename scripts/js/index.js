@@ -228,7 +228,7 @@ class RouteFinder {
             game.settings.get("route-finder", "snapToGrid")
           );
           this.deleteAllOwnRoutes().then(() => {
-            this.walkable.drawPath(path, token).then((drawnPath) => {
+            this.walkable.drawPath(path, token).then(() => {
               this.lastPath = path;
             });
           });
