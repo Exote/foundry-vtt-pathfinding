@@ -219,11 +219,12 @@ class RouteFinder {
       this.countdown = setTimeout(() => {
         const token = canvas.tokens.controlledTokens[0];
         if (token) {
+          const dest = event.data.getLocalPosition(canvas.stage);
           const path = this.walkable.findPath(
             token.center.x,
             token.center.y,
-            event.data.destination.x,
-            event.data.destination.y,
+            dest.x,
+            dest.y,
             token.w / 3,
             game.settings.get("route-finder", "snapToGrid")
           );
