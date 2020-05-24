@@ -85,13 +85,13 @@ class RouteFinder {
           icon: "fas fa-route",
           visible: true,
           onClick: () => {
-            if (canvas.tokens.controlledTokens.length === 1) {
+            if (canvas.tokens.controlled.length === 1) {
               if (game.paused) {
                 this.displayMessage(
                   game.i18n.localize("route-finder.errors.gamePaused")
                 );
               }
-            } else if (canvas.tokens.controlledTokens.length > 1) {
+            } else if (canvas.tokens.controlled.length > 1) {
               this.displayMessage(
                 game.i18n.localize("route-finder.errors.tooManyTokens")
               );
@@ -217,7 +217,7 @@ class RouteFinder {
         clearTimeout(this.countdown);
       }
       this.countdown = setTimeout(() => {
-        const token = canvas.tokens.controlledTokens[0];
+        const token = canvas.tokens.controlled[0];
         if (token) {
           const dest = event.data.getLocalPosition(canvas.stage);
           const path = this.walkable.findPath(
@@ -247,7 +247,7 @@ class RouteFinder {
       this.moveQueue.getPendingLength() === 0 &&
       this.moveQueue.getQueueLength() === 0
     ) {
-      const token = canvas.tokens.controlledTokens[0];
+      const token = canvas.tokens.controlled[0];
       const movePromises = [];
       this.walkable.convertToWaypoints(this.lastPath).forEach((waypoint) => {
         movePromises.push(this.moveTokenToWaypoint(token, waypoint));
