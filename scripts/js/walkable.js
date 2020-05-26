@@ -22,6 +22,11 @@ class Walkable {
     canvas.scene.data.walls.forEach((wall) => {
       this.addWall(wall);
     });
+
+    // Haste module support
+    this.haste = function() {};
+    if (typeof HasteSelf !== undefined && typeof HasteSelf === 'function')
+      this.haste = HasteSelf;
   }
 
   addWall(wall) {
@@ -157,6 +162,7 @@ class Walkable {
         };
         Drawing.create(routeDrawingDetails).then(() => {
           Drawing.create(textDrawingDetails).then(() => {
+            this.haste();
             resolve();
           });
         });
